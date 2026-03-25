@@ -448,85 +448,24 @@ function renderSection(section) {
 // F8 · DASHBOARD — ZAGUAN CARE IA
 // ════════════════════════════════════════
 
-// Genera el resumen conversacional dinámicamente desde appData
+// Genera el resumen conversacional — texto plano, alto nivel, estilo LLM
+// Responde a: "¿Cuál es el estado de los servicios de mantenimiento técnico con Zaguan Care?"
 function generarResumenIA() {
-  const dm  = appData.dominios.filter(d => d.estado === 'migrado').length;
-  const dp  = appData.dominios.filter(d => d.estado === 'pendiente').length;
-  const wm  = appData.webs.filter(w => w.migracion === 'migrado').length;
-  const wf  = appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'facturado').length;
-  const wpf = appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'pendiente').length;
-  const wp  = appData.webs.filter(w => w.migracion === 'pendiente').length;
-  const mb  = appData.mantenimiento.filter(m => m.estado === 'bloqueado').length;
-  const crit = appData.pendientes.filter(p => p.prioridad === 'critico').length;
-  const fact = appData.pendientes.filter(p => p.prioridad === 'facturacion').length;
-  const sitiosEdSchool = ['buenconsejoicod.com', 'buenconsejolalaguna.com', 'colegiobuenconsejo.es'];
+  const ma    = appData.mantenimiento.filter(m => m.estado === 'actualizado').length;
+  const total = appData.mantenimiento.length;
+  const bloq  = appData.mantenimiento.filter(m => m.estado === 'bloqueado').map(m => m.sitio);
+  const edSchool = appData.webs.filter(w => w.alerta && w.alerta.includes('Ed School')).map(w => w.url ? w.url.replace(/^https?:\/\//, '') : w.nombre);
+  const wpf   = appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'pendiente').length;
 
-  const parrafos = [];
+  return [
+    `El servicio de mantenimiento técnico está activo y al día en ${ma} de ${total} sitios del ecosistema. Las instalaciones Hostinger operan con normalidad: actualizaciones aplicadas, entornos estables y sin incidencias abiertas en la mayoría de los sitios gestionados.`,
 
-  // Estado general
-  parrafos.push(
-    `El ecosistema digital de <strong>Franciscanas del Buen Consejo</strong> cuenta con
-     <strong>${appData.dominios.length} dominios</strong> y
-     <strong>${appData.webs.length} sitios WordPress</strong> bajo gestión.
-     La migración principal está muy avanzada: <strong>${dm} de ${appData.dominios.length} dominios</strong>
-     han sido trasladados correctamente a Hostinger, y
-     <strong>${wm} de ${appData.webs.length} sitios web</strong> están ya en el nuevo entorno.`
-  );
+    `Hay un bloqueo activo en ${bloq.join(', ')}. Las tareas de mantenimiento preventivo están detenidas y el caso está en coordinación directa con Hostinger para su resolución. Adicionalmente, ${edSchool.length} sitios utilizan el theme Ed School, que ha sido descatalogado por su desarrollador y ya no recibe actualizaciones de seguridad ni compatibilidad con WordPress. Esto representa el principal riesgo técnico del ecosistema y requiere planificación de migración de theme con carácter urgente.`,
 
-  // Facturación
-  if (wpf > 0) {
-    parrafos.push(
-      `En facturación, <strong>${wf} sitio${wf !== 1 ? 's' : ''}</strong> están completamente cerrado${wf !== 1 ? 's' : ''},
-       pero <strong>${wpf} migración${wpf !== 1 ? 'es' : ''}</strong>
-       ${wpf !== 1 ? 'tienen' : 'tiene'} facturación pendiente de emitir:
-       ${appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'pendiente')
-         .map(w => `<span class="font-mono text-xs bg-slate-100 px-1 rounded">${w.url ? w.url.replace(/^https?:\/\//,'') : w.nombre}</span>`)
-         .join(', ')}.`
-    );
-  }
-
-  // Alertas críticas — theme
-  if (crit > 0) {
-    parrafos.push(
-      `<span class="text-red-700 font-semibold">⚠ Atención crítica:</span>
-       el theme <strong>Ed School</strong> ha sido descatalogado por su desarrollador y ya no recibe
-       actualizaciones de seguridad. Afecta a
-       ${sitiosEdSchool.map(s => `<span class="font-mono text-xs bg-red-50 text-red-700 px-1 rounded border border-red-200">${s}</span>`).join(', ')}.
-       Se recomienda planificar la migración de theme con prioridad alta.`
-    );
-  }
-
-  // Mantenimiento bloqueado
-  if (mb > 0) {
-    const bloq = appData.mantenimiento.filter(m => m.estado === 'bloqueado');
-    parrafos.push(
-      `El mantenimiento de <strong>${bloq.map(b => b.sitio).join(', ')}</strong>
-       está actualmente <span class="text-red-600 font-semibold">bloqueado</span>.
-       Las tareas están detenidas en coordinación con Hostinger para resolver la incidencia.`
-    );
-  }
-
-  // Pendientes externos (Perú + Integra)
-  const externos = appData.pendientes.filter(p => p.prioridad === 'gestion' || p.prioridad === 'comunicacion');
-  if (externos.length > 0) {
-    parrafos.push(
-      `Hay <strong>${externos.length} entidad${externos.length !== 1 ? 'es' : ''}</strong> con gestión externa pendiente:
-       dominios de <strong>Integra Información y Comunicación S.L.</strong> (buen-consejo.com, www2.buen-consejo.com)
-       y sitios en <strong>Perú</strong> (madreteresarodon.edu.pe, buenconsejo.edu.pe)
-       a la espera de comunicación con los responsables locales.`
-    );
-  }
-
-  // Cierre positivo
-  parrafos.push(
-    `En conjunto, <strong>${appData.mantenimiento.filter(m => m.estado === 'actualizado').length} informes
-     de mantenimiento</strong> están al día. El ecosistema opera con normalidad
-     en todos los sitios migrados, con foco de acción en la resolución del stack técnico
-     y el cierre de las ${fact} facturación${fact !== 1 ? 'es' : ''} pendiente${fact !== 1 ? 's' : ''}.`
-  );
-
-  return parrafos;
+    `Como acción complementaria, quedan ${wpf} migraciones completadas pendientes de facturar. El foco inmediato está en resolver el bloqueo de Buen Consejo La Laguna y ejecutar la migración de theme en los tres sitios afectados.`,
+  ];
 }
+
 
 // ── Estado del botón IA ──────────────────────────────────────────────────
 const ICON_SPARKLES = `
@@ -614,7 +553,7 @@ function typewriterHTML(el, contenido, velocidad, alTerminar) {
     // Tags HTML y entidades: insertar inmediatamente sin cursor intermedio
     if (t.tag) {
       el.innerHTML = acum + '<span class="ia-cursor"></span>';
-      paso();                        // siguiente token sin delay
+      setTimeout(paso, 0);           // siguiente token sin bloquear el stack
       return;
     }
     el.innerHTML = acum + '<span class="ia-cursor"></span>';
