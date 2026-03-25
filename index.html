@@ -412,7 +412,7 @@ function renderSection(section) {
   switch (section) {
     case 'dashboard':     return renderPlaceholder('Resumen');
     case 'dominios':      return renderDominios();
-    case 'webs':          return renderPlaceholder('Sitios Web');
+    case 'webs':          return renderWebs();
     case 'mantenimiento': return renderPlaceholder('Mantenimiento');
     case 'alertas':       return renderPlaceholder('Pendientes / Alertas');
     default:              return renderPlaceholder('Sección');
