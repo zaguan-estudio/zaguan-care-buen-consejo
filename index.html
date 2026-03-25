@@ -69,6 +69,8 @@
     #ia-puntos.ia-visible {
       opacity: 1;
     }
+    /* Cuando está oculto del todo no ocupa espacio */
+    #ia-puntos.hidden { display: none !important; }
   </style>
 </head>
 
@@ -578,7 +580,7 @@ function cerrarCuerpoIA() {
   const body   = document.getElementById('ia-body');
   const puntos = document.getElementById('ia-puntos');
   if (body)   { body.classList.add('hidden'); }
-  if (puntos) { puntos.classList.remove('ia-visible'); }
+  if (puntos) { puntos.classList.remove('ia-visible'); puntos.classList.add('hidden'); }
   setBtnEstado('idle');
 }
 
@@ -614,7 +616,8 @@ function iniciarResumenIA() {
 
     typewriterSecuencial(parrafos, 0, VELOCIDAD, () => {
       // Al terminar: fade-in de Puntos clave + botón Regenerar
-      requestAnimationFrame(() => puntos.classList.add('ia-visible'));
+      puntos.classList.remove('hidden');
+      requestAnimationFrame(() => requestAnimationFrame(() => puntos.classList.add('ia-visible')));
       setBtnEstado('done');
     });
   }, 350);
@@ -693,8 +696,8 @@ function renderDashboard() {
           </div>`).join('')}
       </div>
 
-      <!-- Puntos clave (opacity 0 por CSS, se muestra con fade-in al terminar el typewriter) -->
-      <div id="ia-puntos" class="mx-6 mb-5 p-4 rounded-xl bg-slate-50 border border-slate-100">
+      <!-- Puntos clave (hidden por defecto, se muestra con fade-in al terminar el typewriter) -->
+      <div id="ia-puntos" class="hidden mx-6 mb-5 p-4 rounded-xl bg-slate-50 border border-slate-100">
         <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Puntos clave a abordar</p>
         <div class="space-y-2">
           ${[
