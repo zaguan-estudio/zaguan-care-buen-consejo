@@ -458,11 +458,8 @@ function generarResumenIA() {
   const wpf   = appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'pendiente').length;
 
   return [
-    `El servicio de mantenimiento técnico está activo y al día en ${ma} de ${total} sitios del ecosistema. Las instalaciones Hostinger operan con normalidad: actualizaciones aplicadas, entornos estables y sin incidencias abiertas en la mayoría de los sitios gestionados.`,
-
-    `Hay un bloqueo activo en ${bloq.join(', ')}. Las tareas de mantenimiento preventivo están detenidas y el caso está en coordinación directa con Hostinger para su resolución. Adicionalmente, ${edSchool.length} sitios utilizan el theme Ed School, que ha sido descatalogado por su desarrollador y ya no recibe actualizaciones de seguridad ni compatibilidad con WordPress. Esto representa el principal riesgo técnico del ecosistema y requiere planificación de migración de theme con carácter urgente.`,
-
-    `Como acción complementaria, quedan ${wpf} migraciones completadas pendientes de facturar. El foco inmediato está en resolver el bloqueo de Buen Consejo La Laguna y ejecutar la migración de theme en los tres sitios afectados.`,
+    `Mantenimiento activo en ${ma} de ${total} sitios. Hostinger estable, sin incidencias abiertas.`,
+    `Bloqueo activo en ${bloq.join(', ')} — en coordinación con Hostinger. ${edSchool.length} sitios con theme Ed School descatalogado: riesgo de seguridad urgente. ${wpf} migracion${wpf !== 1 ? 'es' : ''} completada${wpf !== 1 ? 's' : ''} pendiente${wpf !== 1 ? 's' : ''} de facturar.`,
   ];
 }
 
@@ -577,6 +574,14 @@ function typewriterSecuencial(parrafos, idx, velocidad, alFinalizar) {
   });
 }
 
+function cerrarCuerpoIA() {
+  const body   = document.getElementById('ia-body');
+  const puntos = document.getElementById('ia-puntos');
+  if (body)   { body.classList.add('hidden'); }
+  if (puntos) { puntos.classList.remove('ia-visible'); }
+  setBtnEstado('idle');
+}
+
 // ── Paso 2 + 3 · Orquestación ───────────────────────────────────────────
 function iniciarResumenIA() {
   const body   = document.getElementById('ia-body');
@@ -668,7 +673,15 @@ function renderDashboard() {
       </div>
 
       <!-- Cuerpo conversacional (oculto por defecto, párrafos vacíos — los rellena el typewriter) -->
-      <div id="ia-body" class="hidden px-6 py-5 space-y-3.5">
+      <div id="ia-body" class="hidden relative px-6 pt-4 pb-5 space-y-3.5">
+        <!-- Botón cerrar -->
+        <button onclick="cerrarCuerpoIA()" title="Cerrar"
+          class="absolute top-3 right-4 w-6 h-6 flex items-center justify-center rounded-md
+                 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
         ${parrafos.map((_, i) => `
           <div class="flex gap-3 ${i > 0 ? 'pt-1' : ''}">
             ${i === 0
