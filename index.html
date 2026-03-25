@@ -503,6 +503,14 @@ function generarResumenIA() {
   return parrafos;
 }
 
+// Stub — se completará en Paso 2 (show/hide) y Paso 3 (typewriter)
+function iniciarResumenIA() {
+  const body   = document.getElementById('ia-body');
+  const puntos = document.getElementById('ia-puntos');
+  if (body)   body.classList.remove('hidden');
+  if (puntos) puntos.classList.remove('hidden');
+}
+
 function renderDashboard() {
   const parrafos   = generarResumenIA();
   const dm  = appData.dominios.filter(d => d.estado === 'migrado').length;
@@ -525,22 +533,38 @@ function renderDashboard() {
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 
       <!-- Header del módulo -->
-      <div class="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-900 to-slate-800">
-        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-          <span class="text-white font-bold text-sm leading-none select-none">z</span>
+      <div class="flex items-center gap-3 px-5 py-3.5 bg-slate-50 border-b border-slate-200">
+        <div class="w-7 h-7 rounded-md bg-blue-600 flex items-center justify-center flex-shrink-0">
+          <span class="text-white font-bold text-xs leading-none select-none">z</span>
         </div>
-        <div>
-          <p class="text-white font-semibold text-sm tracking-tight">Zaguan Care IA</p>
-          <p class="text-slate-400 text-[11px]">Resumen inteligente del ecosistema · 24/03/2026</p>
+        <div class="flex-1 min-w-0">
+          <p class="text-slate-700 font-semibold text-sm tracking-tight">Zaguan Care IA</p>
         </div>
-        <div class="ml-auto flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-          <span class="text-[11px] text-slate-400">Activo</span>
-        </div>
+        <!-- Botón Resumen de estado IA -->
+        <button
+          id="btn-ia"
+          onclick="iniciarResumenIA()"
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium
+                 bg-white border border-slate-200 text-slate-700
+                 hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50
+                 shadow-sm transition-all">
+          <!-- Icono sparkles / IA -->
+          <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+              d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25
+                 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5
+                 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z
+                 M18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456
+                 L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259
+                 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375
+                 3.375 0 00-2.456 2.456z"/>
+          </svg>
+          Resumen de estado IA
+        </button>
       </div>
 
-      <!-- Cuerpo conversacional -->
-      <div class="px-6 py-5 space-y-3.5">
+      <!-- Cuerpo conversacional (oculto por defecto) -->
+      <div id="ia-body" class="hidden px-6 py-5 space-y-3.5">
         ${parrafos.map((p, i) => `
           <div class="flex gap-3 ${i > 0 ? 'pt-1' : ''}">
             ${i === 0
@@ -552,8 +576,8 @@ function renderDashboard() {
           </div>`).join('')}
       </div>
 
-      <!-- Puntos clave -->
-      <div class="mx-6 mb-5 p-4 rounded-xl bg-slate-50 border border-slate-100">
+      <!-- Puntos clave (oculto por defecto) -->
+      <div id="ia-puntos" class="hidden mx-6 mb-5 p-4 rounded-xl bg-slate-50 border border-slate-100">
         <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Puntos clave a abordar</p>
         <div class="space-y-2">
           ${[
