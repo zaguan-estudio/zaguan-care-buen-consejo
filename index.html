@@ -410,13 +410,297 @@ function renderPlaceholder(label) {
 
 function renderSection(section) {
   switch (section) {
-    case 'dashboard':     return renderPlaceholder('Resumen');
+    case 'dashboard':     return renderDashboard();
     case 'dominios':      return renderDominios();
     case 'webs':          return renderWebs();
     case 'mantenimiento': return renderPlaceholder('Mantenimiento');
     case 'alertas':       return renderPlaceholder('Pendientes / Alertas');
     default:              return renderPlaceholder('Sección');
   }
+}
+
+// ════════════════════════════════════════
+// F8 · DASHBOARD — ZAGUAN CARE IA
+// ════════════════════════════════════════
+
+// Genera el resumen conversacional dinámicamente desde appData
+function generarResumenIA() {
+  const dm  = appData.dominios.filter(d => d.estado === 'migrado').length;
+  const dp  = appData.dominios.filter(d => d.estado === 'pendiente').length;
+  const wm  = appData.webs.filter(w => w.migracion === 'migrado').length;
+  const wf  = appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'facturado').length;
+  const wpf = appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'pendiente').length;
+  const wp  = appData.webs.filter(w => w.migracion === 'pendiente').length;
+  const mb  = appData.mantenimiento.filter(m => m.estado === 'bloqueado').length;
+  const crit = appData.pendientes.filter(p => p.prioridad === 'critico').length;
+  const fact = appData.pendientes.filter(p => p.prioridad === 'facturacion').length;
+  const sitiosEdSchool = ['buenconsejoicod.com', 'buenconsejolalaguna.com', 'colegiobuenconsejo.es'];
+
+  const parrafos = [];
+
+  // Estado general
+  parrafos.push(
+    `El ecosistema digital de <strong>Franciscanas del Buen Consejo</strong> cuenta con
+     <strong>${appData.dominios.length} dominios</strong> y
+     <strong>${appData.webs.length} sitios WordPress</strong> bajo gestión.
+     La migración principal está muy avanzada: <strong>${dm} de ${appData.dominios.length} dominios</strong>
+     han sido trasladados correctamente a Hostinger, y
+     <strong>${wm} de ${appData.webs.length} sitios web</strong> están ya en el nuevo entorno.`
+  );
+
+  // Facturación
+  if (wpf > 0) {
+    parrafos.push(
+      `En facturación, <strong>${wf} sitio${wf !== 1 ? 's' : ''}</strong> están completamente cerrado${wf !== 1 ? 's' : ''},
+       pero <strong>${wpf} migración${wpf !== 1 ? 'es' : ''}</strong>
+       ${wpf !== 1 ? 'tienen' : 'tiene'} facturación pendiente de emitir:
+       ${appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'pendiente')
+         .map(w => `<span class="font-mono text-xs bg-slate-100 px-1 rounded">${w.url ? w.url.replace(/^https?:\/\//,'') : w.nombre}</span>`)
+         .join(', ')}.`
+    );
+  }
+
+  // Alertas críticas — theme
+  if (crit > 0) {
+    parrafos.push(
+      `<span class="text-red-700 font-semibold">⚠ Atención crítica:</span>
+       el theme <strong>Ed School</strong> ha sido descatalogado por su desarrollador y ya no recibe
+       actualizaciones de seguridad. Afecta a
+       ${sitiosEdSchool.map(s => `<span class="font-mono text-xs bg-red-50 text-red-700 px-1 rounded border border-red-200">${s}</span>`).join(', ')}.
+       Se recomienda planificar la migración de theme con prioridad alta.`
+    );
+  }
+
+  // Mantenimiento bloqueado
+  if (mb > 0) {
+    const bloq = appData.mantenimiento.filter(m => m.estado === 'bloqueado');
+    parrafos.push(
+      `El mantenimiento de <strong>${bloq.map(b => b.sitio).join(', ')}</strong>
+       está actualmente <span class="text-red-600 font-semibold">bloqueado</span>.
+       Las tareas están detenidas en coordinación con Hostinger para resolver la incidencia.`
+    );
+  }
+
+  // Pendientes externos (Perú + Integra)
+  const externos = appData.pendientes.filter(p => p.prioridad === 'gestion' || p.prioridad === 'comunicacion');
+  if (externos.length > 0) {
+    parrafos.push(
+      `Hay <strong>${externos.length} entidad${externos.length !== 1 ? 'es' : ''}</strong> con gestión externa pendiente:
+       dominios de <strong>Integra Información y Comunicación S.L.</strong> (buen-consejo.com, www2.buen-consejo.com)
+       y sitios en <strong>Perú</strong> (madreteresarodon.edu.pe, buenconsejo.edu.pe)
+       a la espera de comunicación con los responsables locales.`
+    );
+  }
+
+  // Cierre positivo
+  parrafos.push(
+    `En conjunto, <strong>${appData.mantenimiento.filter(m => m.estado === 'actualizado').length} informes
+     de mantenimiento</strong> están al día. El ecosistema opera con normalidad
+     en todos los sitios migrados, con foco de acción en la resolución del stack técnico
+     y el cierre de las ${fact} facturación${fact !== 1 ? 'es' : ''} pendiente${fact !== 1 ? 's' : ''}.`
+  );
+
+  return parrafos;
+}
+
+function renderDashboard() {
+  const parrafos   = generarResumenIA();
+  const dm  = appData.dominios.filter(d => d.estado === 'migrado').length;
+  const dp  = appData.dominios.filter(d => d.estado === 'pendiente').length;
+  const wMigFact = appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'facturado').length;
+  const wMigPend = appData.webs.filter(w => w.migracion === 'migrado' && w.facturacion === 'pendiente').length;
+  const wPend    = appData.webs.filter(w => w.migracion === 'pendiente').length;
+
+  const gruposPendientes = [
+    { key: 'critico',      label: 'Crítico',                dot: 'bg-red-500',    pill: 'bg-red-100 text-red-700' },
+    { key: 'gestion',      label: 'En gestión',             dot: 'bg-yellow-500', pill: 'bg-yellow-100 text-yellow-700' },
+    { key: 'comunicacion', label: 'Pend. comunicación',     dot: 'bg-blue-500',   pill: 'bg-blue-100 text-blue-700' },
+    { key: 'facturacion',  label: 'Pend. facturación',      dot: 'bg-orange-500', pill: 'bg-orange-100 text-orange-700' },
+  ];
+
+  return `
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- ── ZAGUAN CARE IA ── -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+      <!-- Header del módulo -->
+      <div class="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-900 to-slate-800">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+          <span class="text-white font-bold text-sm leading-none select-none">z</span>
+        </div>
+        <div>
+          <p class="text-white font-semibold text-sm tracking-tight">Zaguan Care IA</p>
+          <p class="text-slate-400 text-[11px]">Resumen inteligente del ecosistema · 24/03/2026</p>
+        </div>
+        <div class="ml-auto flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+          <span class="text-[11px] text-slate-400">Activo</span>
+        </div>
+      </div>
+
+      <!-- Cuerpo conversacional -->
+      <div class="px-6 py-5 space-y-3.5">
+        ${parrafos.map((p, i) => `
+          <div class="flex gap-3 ${i > 0 ? 'pt-1' : ''}">
+            ${i === 0
+              ? `<div class="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                   <span class="text-white font-bold text-[10px] leading-none">z</span>
+                 </div>`
+              : `<div class="w-6 flex-shrink-0"></div>`}
+            <p class="text-sm text-slate-700 leading-relaxed">${p}</p>
+          </div>`).join('')}
+      </div>
+
+      <!-- Puntos clave -->
+      <div class="mx-6 mb-5 p-4 rounded-xl bg-slate-50 border border-slate-100">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Puntos clave a abordar</p>
+        <div class="space-y-2">
+          ${[
+            { color: 'text-red-500',    bg: 'bg-red-50 border-red-200',    icon: '⚠', texto: 'Migrar theme Ed School en 3 sitios (buenconsejoicod.com, buenconsejolalaguna.com, colegiobuenconsejo.es)' },
+            { color: 'text-red-500',    bg: 'bg-red-50 border-red-200',    icon: '⛔', texto: 'Desbloquear mantenimiento de Buen Consejo La Laguna (coordinación con Hostinger)' },
+            { color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200', icon: '📋', texto: `Emitir ${wMigPend} factura${wMigPend !== 1 ? 's' : ''} pendiente${wMigPend !== 1 ? 's' : ''} por migraciones completadas` },
+            { color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200', icon: '📨', texto: 'Obtener respuesta de Integra para acceso a buen-consejo.com y www2.buen-consejo.com' },
+            { color: 'text-blue-500',   bg: 'bg-blue-50 border-blue-200',   icon: '🌎', texto: 'Establecer contacto con responsables en Perú (madreteresarodon.edu.pe, buenconsejo.edu.pe)' },
+          ].map(p => `
+            <div class="flex items-start gap-2.5 px-3 py-2 rounded-lg border ${p.bg}">
+              <span class="text-sm flex-shrink-0 mt-px">${p.icon}</span>
+              <p class="text-xs text-slate-700 leading-relaxed">${p.texto}</p>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── NÚMEROS: DOMINIOS + WEBS ── -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+      <!-- Dominios por estado -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657
+                   0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+            </svg>
+            <h3 class="text-sm font-semibold text-slate-800">Dominios</h3>
+          </div>
+          <span class="text-2xl font-bold text-slate-900">${appData.dominios.length}</span>
+        </div>
+        <div class="divide-y divide-slate-100">
+          ${[
+            { label: 'Migrados a Hostinger', valor: dm,  pct: Math.round(dm/appData.dominios.length*100),  color: 'bg-green-500', pill: 'bg-green-100 text-green-800' },
+            { label: 'Pendientes',           valor: dp,  pct: Math.round(dp/appData.dominios.length*100),  color: 'bg-yellow-400', pill: 'bg-yellow-100 text-yellow-800' },
+          ].map(r => `
+            <div class="px-5 py-3">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-sm text-slate-600">${r.label}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-slate-900">${r.valor}</span>
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${r.pill}">${r.pct}%</span>
+                </div>
+              </div>
+              <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full ${r.color} rounded-full transition-all" style="width:${r.pct}%"></div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="px-5 py-3 bg-slate-50/50 border-t border-slate-100">
+          <button onclick="navigate('dominios')"
+            class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
+            Ver tabla completa →
+          </button>
+        </div>
+      </div>
+
+      <!-- Webs por estado -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <h3 class="text-sm font-semibold text-slate-800">Sitios Web WordPress</h3>
+          </div>
+          <span class="text-2xl font-bold text-slate-900">${appData.webs.length}</span>
+        </div>
+        <div class="divide-y divide-slate-100">
+          ${[
+            { label: 'Migrado · Facturado',        valor: wMigFact, color: 'bg-green-500',  pill: 'bg-green-100 text-green-800' },
+            { label: 'Migrado · Pend. facturación', valor: wMigPend, color: 'bg-blue-400',   pill: 'bg-blue-100 text-blue-800' },
+            { label: 'Pendiente migración',         valor: wPend,    color: 'bg-yellow-400', pill: 'bg-yellow-100 text-yellow-800' },
+          ].map(r => `
+            <div class="px-5 py-3">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-sm text-slate-600">${r.label}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-slate-900">${r.valor}</span>
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${r.pill}">${Math.round(r.valor/appData.webs.length*100)}%</span>
+                </div>
+              </div>
+              <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full ${r.color} rounded-full transition-all" style="width:${Math.round(r.valor/appData.webs.length*100)}%"></div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="px-5 py-3 bg-slate-50/50 border-t border-slate-100">
+          <button onclick="navigate('webs')"
+            class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
+            Ver tabla completa →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PENDIENTES POR GRUPO ── -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-semibold text-slate-800">Pendientes por prioridad</h3>
+          <p class="text-xs text-slate-400 mt-0.5">${appData.pendientes.length} items abiertos</p>
+        </div>
+      </div>
+      <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        ${gruposPendientes.map(g => {
+          const items = appData.pendientes.filter(p => p.prioridad === g.key);
+          return `
+            <div class="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition-colors">
+              <span class="w-2.5 h-2.5 rounded-full ${g.dot}"></span>
+              <span class="text-2xl font-bold text-slate-900">${items.length}</span>
+              <span class="text-[11px] text-slate-500 text-center leading-tight">${g.label}</span>
+            </div>`;
+        }).join('')}
+      </div>
+      <div class="divide-y divide-slate-100 border-t border-slate-100">
+        ${appData.pendientes.filter(p => p.prioridad === 'critico').map(p => `
+          <div class="flex items-start gap-3 px-6 py-3.5 hover:bg-red-50/40 transition-colors cursor-pointer"
+            onclick="abrirDrawer('${p.refTipo}', '${p.refId}')">
+            <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span>
+            <div class="min-w-0 flex-1">
+              <span class="text-[10px] font-semibold uppercase tracking-wider text-red-500">${p.categoria}</span>
+              <p class="text-sm text-slate-700 leading-snug mt-0.5">${p.descripcion}</p>
+            </div>
+            <svg class="w-3.5 h-3.5 text-slate-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>`).join('')}
+        ${appData.pendientes.filter(p => p.prioridad === 'facturacion').map(p => `
+          <div class="flex items-start gap-3 px-6 py-3.5 hover:bg-orange-50/40 transition-colors cursor-pointer"
+            onclick="abrirDrawer('${p.refTipo}', '${p.refId}')">
+            <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0"></span>
+            <div class="min-w-0 flex-1">
+              <span class="text-[10px] font-semibold uppercase tracking-wider text-orange-500">${p.categoria}</span>
+              <p class="text-sm text-slate-700 leading-snug mt-0.5">${p.descripcion}</p>
+            </div>
+            <svg class="w-3.5 h-3.5 text-slate-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>`).join('')}
+      </div>
+    </div>
+
+  </div>`;
 }
 
 // ════════════════════════════════════════
