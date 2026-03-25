@@ -44,6 +44,31 @@
     .drawer-panel.open {
       transform: translateX(0);
     }
+
+    /* ── Typewriter IA ── */
+    .ia-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 0.9em;
+      background: #475569;
+      margin-left: 1px;
+      vertical-align: text-bottom;
+      border-radius: 1px;
+      animation: ia-blink 0.6s step-end infinite;
+    }
+    @keyframes ia-blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ── Fade-in Puntos clave ── */
+    #ia-puntos {
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    #ia-puntos.ia-visible {
+      opacity: 1;
+    }
   </style>
 </head>
 
@@ -557,30 +582,98 @@ function setBtnEstado(estado) {
                     border shadow-sm transition-all ${cfg.cls}`;
 }
 
-// ── Paso 2 · Mostrar / ocultar contenido ────────────────────────────────
-// (el efecto typewriter se añadirá en Paso 3 dentro de mostrarContenidoIA)
+// ── Paso 3 · Typewriter ─────────────────────────────────────────────────
+
+// Tokeniza un string HTML en chars de texto y tags completos
+function tokenizarHTML(html) {
+  const tokens = [];
+  const re = /(<[^>]+>|&[a-z]+;|&#\d+;)|([^<&])/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    if (m[1]) tokens.push({ tag: true,  val: m[1] });
+    else      tokens.push({ tag: false, val: m[2] });
+  }
+  return tokens;
+}
+
+// Escribe el HTML de `contenido` en `el`, carácter a carácter, con cursor parpadeante
+// `velocidad` ms por carácter de texto; los tags se insertan al instante
+function typewriterHTML(el, contenido, velocidad, alTerminar) {
+  const tokens = tokenizarHTML(contenido);
+  let acum = '';
+  let i = 0;
+
+  function paso() {
+    if (i >= tokens.length) {
+      el.innerHTML = acum;           // estado final sin cursor
+      if (alTerminar) alTerminar();
+      return;
+    }
+    const t = tokens[i++];
+    acum += t.val;
+    // Tags HTML y entidades: insertar inmediatamente sin cursor intermedio
+    if (t.tag) {
+      el.innerHTML = acum + '<span class="ia-cursor"></span>';
+      paso();                        // siguiente token sin delay
+      return;
+    }
+    el.innerHTML = acum + '<span class="ia-cursor"></span>';
+    setTimeout(paso, velocidad);
+  }
+  paso();
+}
+
+// Encadena el typewriter sobre cada párrafo id="ia-p-N" en secuencia
+function typewriterSecuencial(parrafos, idx, velocidad, alFinalizar) {
+  if (idx >= parrafos.length) {
+    if (alFinalizar) alFinalizar();
+    return;
+  }
+  const el = document.getElementById(`ia-p-${idx}`);
+  if (!el) { typewriterSecuencial(parrafos, idx + 1, velocidad, alFinalizar); return; }
+
+  typewriterHTML(el, parrafos[idx], velocidad, () => {
+    // Pausa breve entre párrafos para simular "pensamiento"
+    setTimeout(() => typewriterSecuencial(parrafos, idx + 1, velocidad, alFinalizar), 120);
+  });
+}
+
+// ── Paso 2 + 3 · Orquestación ───────────────────────────────────────────
 function iniciarResumenIA() {
   const body   = document.getElementById('ia-body');
   const puntos = document.getElementById('ia-puntos');
   if (!body) return;
 
-  // Si ya estaba visible → resetear (modo Regenerar)
+  // Modo Regenerar: si el cuerpo ya está visible, resetear todo
   if (!body.classList.contains('hidden')) {
+    // Limpiar párrafos
+    generarResumenIA().forEach((_, i) => {
+      const el = document.getElementById(`ia-p-${i}`);
+      if (el) el.innerHTML = '';
+    });
+    puntos.classList.remove('ia-visible');
     body.classList.add('hidden');
-    puntos.classList.add('hidden');
     setBtnEstado('idle');
     return;
   }
 
-  // Estado: cargando
+  // Estado cargando → pequeña pausa visual antes de arrancar
   setBtnEstado('loading');
 
-  // Pequeña pausa visual antes de mostrar (se sustituirá por typewriter en Paso 3)
   setTimeout(() => {
+    // Mostrar el contenedor de párrafos (vacíos aún)
     body.classList.remove('hidden');
-    puntos.classList.remove('hidden');
-    setBtnEstado('done');
-  }, 600);
+
+    // Lanzar typewriter en todos los párrafos secuencialmente
+    const parrafos = generarResumenIA();
+    const VELOCIDAD = 14; // ms por carácter (~70 chars/s)
+
+    typewriterSecuencial(parrafos, 0, VELOCIDAD, () => {
+      // Al terminar: fade-in de Puntos clave + botón Regenerar
+      requestAnimationFrame(() => puntos.classList.add('ia-visible'));
+      setBtnEstado('done');
+    });
+  }, 350);
 }
 
 function renderDashboard() {
@@ -635,21 +728,21 @@ function renderDashboard() {
         </button>
       </div>
 
-      <!-- Cuerpo conversacional (oculto por defecto) -->
+      <!-- Cuerpo conversacional (oculto por defecto, párrafos vacíos — los rellena el typewriter) -->
       <div id="ia-body" class="hidden px-6 py-5 space-y-3.5">
-        ${parrafos.map((p, i) => `
+        ${parrafos.map((_, i) => `
           <div class="flex gap-3 ${i > 0 ? 'pt-1' : ''}">
             ${i === 0
               ? `<div class="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
                    <span class="text-white font-bold text-[10px] leading-none">z</span>
                  </div>`
               : `<div class="w-6 flex-shrink-0"></div>`}
-            <p class="text-sm text-slate-700 leading-relaxed">${p}</p>
+            <p id="ia-p-${i}" class="text-sm text-slate-700 leading-relaxed"></p>
           </div>`).join('')}
       </div>
 
-      <!-- Puntos clave (oculto por defecto) -->
-      <div id="ia-puntos" class="hidden mx-6 mb-5 p-4 rounded-xl bg-slate-50 border border-slate-100">
+      <!-- Puntos clave (opacity 0 por CSS, se muestra con fade-in al terminar el typewriter) -->
+      <div id="ia-puntos" class="mx-6 mb-5 p-4 rounded-xl bg-slate-50 border border-slate-100">
         <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Puntos clave a abordar</p>
         <div class="space-y-2">
           ${[
