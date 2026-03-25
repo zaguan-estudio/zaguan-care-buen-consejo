@@ -264,6 +264,93 @@ function navigate(section) {
   document.getElementById('content').innerHTML = renderSection(section);
 }
 
+// ════════════════════════════════════════
+// FASE 2 · CAPA DE DATOS
+// ════════════════════════════════════════
+
+const appData = {
+  lastUpdated: '2026-03-24',
+
+  // ── Dominios ──────────────────────────────────────────────────────────────
+  dominios: [
+    // MIGRADOS
+    { id: 'd1',  nombre: 'residenciasanfranciscodeasis.com',     proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://residenciasanfranciscodeasis.com',     notas: 'Dominio migrado al hosting de Buen Consejo en Hostinger. Operativo.' },
+    { id: 'd2',  nombre: 'residenciasanfranciscodeasis.es',      proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://residenciasanfranciscodeasis.es',      notas: 'Dominio migrado al hosting de Buen Consejo en Hostinger. Operativo.' },
+    { id: 'd3',  nombre: 'residenciasanfranciscodeasis.org',     proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://residenciasanfranciscodeasis.org',     notas: 'Dominio migrado al hosting de Buen Consejo en Hostinger. Operativo.' },
+    { id: 'd4',  nombre: 'residenciasanmiguelarcangel.org',      proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://residenciasanmiguelarcangel.org',      notas: 'Dominio migrado al hosting de Buen Consejo en Hostinger. Operativo.' },
+    { id: 'd5',  nombre: 'residenciasanmiguelarcangel.es',       proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://residenciasanmiguelarcangel.es',       notas: 'Dominio migrado al hosting de Buen Consejo en Hostinger. Operativo.' },
+    { id: 'd6',  nombre: 'residenciasanmiguelarcangel.com',      proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://residenciasanmiguelarcangel.com',      notas: 'Dominio migrado al hosting de Buen Consejo en Hostinger. Operativo.' },
+    { id: 'd7',  nombre: 'centroinfantilsanjoseysanantonio.org', proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://centroinfantilsanjoseysanantonio.org', notas: 'Dominio migrado al hosting de Buen Consejo en Hostinger. Operativo.' },
+    { id: 'd8',  nombre: 'franciscanasdelbuenconsejo.org',       proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://franciscanasdelbuenconsejo.org',       notas: 'Dominio principal de la congregación. Migrado y operativo.' },
+    { id: 'd9',  nombre: 'madreteresarodon.es',                  proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://madreteresarodon.es',                  notas: 'Dominio migrado. Sitio web en evaluación técnica de stack.' },
+    { id: 'd10', nombre: 'buenconsejoicod.com',                  proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://buenconsejoicod.com',                  notas: 'Migrado a Hostinger. Theme Ed School descatalogado pendiente de actualización.' },
+    { id: 'd11', nombre: 'buenconsejoicod.es',                   proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://buenconsejoicod.es',                   notas: 'Dominio secundario migrado. Operativo.' },
+    { id: 'd12', nombre: 'buenconsejoicod.org',                  proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://buenconsejoicod.org',                  notas: 'Dominio secundario migrado. Operativo.' },
+    { id: 'd13', nombre: 'buenconsejolalaguna.com',              proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://buenconsejolalaguna.com',              notas: 'Migrado. Instalación Multisite con theme Ed School descatalogado. Mantenimiento bloqueado.' },
+    { id: 'd14', nombre: 'buenconsejolalaguna.es',               proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://buenconsejolalaguna.es',               notas: 'Dominio secundario migrado. Operativo.' },
+    { id: 'd15', nombre: 'buenconsejolalaguna.org',              proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://buenconsejolalaguna.org',              notas: 'Dominio secundario migrado. Operativo.' },
+    { id: 'd16', nombre: 'bcll.es',                              proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://bcll.es',                              notas: 'Dominio abreviado migrado. Operativo.' },
+    { id: 'd17', nombre: 'colegiobuenconsejo.es',                proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://colegiobuenconsejo.es',                notas: 'Migrado. Theme Ed School descatalogado. Requiere actualización de stack.' },
+    { id: 'd18', nombre: 'fbconsejo.org',                        proveedor: 'Hostinger Buen Consejo', estado: 'migrado',   url: 'https://fbconsejo.org',                        notas: 'Dominio migrado. Operativo.' },
+    // PENDIENTES
+    { id: 'd19', nombre: 'enroa.org',                    proveedor: '—',                                    estado: 'pendiente', url: null, notas: 'ONG. Web activa en Wix (webenroa.wixsite.com/enroa). Pendiente decisión de migración al ecosistema principal.' },
+    { id: 'd20', nombre: 'buen-consejo.com',             proveedor: 'Integra Información y Comunicación S.L.', estado: 'pendiente', url: null, notas: 'Dominio en gestión por Integra. Pendiente respuesta y coordinación para migración.' },
+    { id: 'd21', nombre: 'sj-sa.org',                   proveedor: '—',                                    estado: 'pendiente', url: null, notas: 'Sin información disponible. Pendiente identificar responsable y estado actual.' },
+    { id: 'd22', nombre: 'madreteresarodon.edu.pe',      proveedor: '—',                                    estado: 'pendiente', url: null, notas: 'Dominio en Perú. Pendiente comunicación con responsable local para coordinar acceso y eventual migración.' },
+    { id: 'd23', nombre: 'buenconsejo.edu.pe',           proveedor: '—',                                    estado: 'pendiente', url: null, notas: 'Dominio en Perú. Pendiente comunicación con responsable local para coordinar acceso y eventual migración.' },
+  ],
+
+  // ── Sitios Web WordPress ──────────────────────────────────────────────────
+  webs: [
+    // Migrado + Facturado
+    { id: 'w1', nombre: 'Franciscanas del Buen Consejo',          url: 'https://franciscanasdelbuenconsejo.org',       proveedor: 'Hostinger', migracion: 'migrado',   facturacion: 'facturado',    theme: null,                       alerta: null,                                                                                                                                                                                             informeUrl: '#' },
+    { id: 'w2', nombre: 'Madre Teresa Rodón',                     url: 'https://madreteresarodon.es',                  proveedor: 'Hostinger', migracion: 'migrado',   facturacion: 'facturado',    theme: 'En evaluación técnica',    alerta: 'Evaluación técnica en curso. Escenario A: actualización al theme común del ecosistema. Escenario B: puesta a punto profunda del entorno actual sin cambio de theme.',        informeUrl: '#' },
+    { id: 'w3', nombre: 'Centro Infantil San José y San Antonio', url: 'https://centroinfantilsanjoseysanantonio.org', proveedor: 'Hostinger', migracion: 'migrado',   facturacion: 'facturado',    theme: null,                       alerta: null,                                                                                                                                                                                             informeUrl: '#' },
+    { id: 'w4', nombre: 'Buen Consejo La Laguna',                 url: 'https://buenconsejolalaguna.com',              proveedor: 'Hostinger', migracion: 'migrado',   facturacion: 'facturado',    theme: 'Ed School (descatalogado)', alerta: 'Theme Ed School descatalogado. Instalación Multisite. Mantenimiento bloqueado, en coordinación con Hostinger. Requiere migración de theme urgente.',               informeUrl: '#' },
+    // Migrado + Pendiente facturación
+    { id: 'w5', nombre: 'Buen Consejo Icod',                      url: 'https://buenconsejoicod.com',                  proveedor: 'Hostinger', migracion: 'migrado',   facturacion: 'pendiente',    theme: 'Ed School (descatalogado)', alerta: 'Theme Ed School descatalogado. No recibe actualizaciones de seguridad ni compatibilidad con versiones actuales de WordPress. Requiere migración de theme.',         informeUrl: '#' },
+    { id: 'w6', nombre: 'Residencia San Francisco de Asís',       url: 'https://residenciasanfranciscodeasis.org',     proveedor: 'Hostinger', migracion: 'migrado',   facturacion: 'pendiente',    theme: null,                       alerta: null,                                                                                                                                                                                             informeUrl: '#' },
+    { id: 'w7', nombre: 'Residencia San Miguel Arcángel',         url: 'https://residenciasanmiguelarcangel.org',      proveedor: 'Hostinger', migracion: 'migrado',   facturacion: 'pendiente',    theme: null,                       alerta: null,                                                                                                                                                                                             informeUrl: '#' },
+    { id: 'w8', nombre: 'Colegio Buen Consejo',                   url: 'https://colegiobuenconsejo.es',                proveedor: 'Hostinger', migracion: 'migrado',   facturacion: 'pendiente',    theme: 'Ed School (descatalogado)', alerta: 'Theme Ed School descatalogado. Requiere migración a nueva solución de theme validada en el ecosistema.',                                                            informeUrl: '#' },
+    // Pendiente migración
+    { id: 'w9',  nombre: 'Buen Consejo (Principal)', url: 'https://buen-consejo.com',       proveedor: 'Integra Información y Comunicación S.L.', migracion: 'pendiente', facturacion: 'no-facturado', theme: 'Desconocido', alerta: 'Gestionado por Integra. Pendiente comunicación y accesos para evaluación técnica.',                   informeUrl: '#' },
+    { id: 'w10', nombre: 'Buen Consejo (www2)',       url: 'https://www2.buen-consejo.com',  proveedor: 'Integra Información y Comunicación S.L.', migracion: 'pendiente', facturacion: 'no-facturado', theme: 'Desconocido', alerta: 'Gestionado por Integra. Pendiente comunicación y accesos para evaluación técnica.',                   informeUrl: '#' },
+    { id: 'w11', nombre: 'Madre Teresa Rodón (Perú)', url: null,                             proveedor: '— (Perú)',                                migracion: 'pendiente', facturacion: 'no-facturado', theme: 'Desconocido', alerta: 'Pendiente contacto con responsable en Perú para coordinación de acceso y evaluación.',               informeUrl: '#' },
+    { id: 'w12', nombre: 'Buen Consejo (Perú)',        url: null,                             proveedor: '— (Perú)',                                migracion: 'pendiente', facturacion: 'no-facturado', theme: 'Desconocido', alerta: 'Pendiente contacto con responsable en Perú para coordinación de acceso y evaluación.',               informeUrl: '#' },
+  ],
+
+  // ── Mantenimiento ─────────────────────────────────────────────────────────
+  mantenimiento: [
+    { id: 'm1', sitio: 'Franciscanas del Buen Consejo',          estado: 'actualizado', notas: 'Todas las actualizaciones aplicadas.' },
+    { id: 'm2', sitio: 'Buen Consejo Icod',                      estado: 'actualizado', notas: 'Informe al día. Pendiente resolución alerta theme Ed School.' },
+    { id: 'm3', sitio: 'Buen Consejo Madrid (La Laguna)',        estado: 'actualizado', notas: 'Informe al día.' },
+    { id: 'm4', sitio: 'Residencia San Francisco de Asís',       estado: 'actualizado', notas: 'Todas las actualizaciones aplicadas.' },
+    { id: 'm5', sitio: 'Residencia San Miguel Arcángel',         estado: 'actualizado', notas: 'Todas las actualizaciones aplicadas.' },
+    { id: 'm6', sitio: 'Centro Infantil San José y San Antonio', estado: 'actualizado', notas: 'Todas las actualizaciones aplicadas.' },
+    { id: 'm7', sitio: 'Madre Teresa Rodón',                     estado: 'actualizado', notas: 'Informe al día. Evaluación técnica de stack en curso.' },
+    { id: 'm8', sitio: 'Buen Consejo La Laguna',                 estado: 'bloqueado',   notas: 'Tareas bloqueadas. En coordinación con Hostinger. Theme Ed School descatalogado + Multisite.' },
+  ],
+
+  // ── Pendientes / Alertas ──────────────────────────────────────────────────
+  pendientes: [
+    // Crítico
+    { id: 'p1',  prioridad: 'critico',      categoria: 'Stack técnico',   descripcion: 'Theme Ed School descatalogado en 3 sitios (buenconsejoicod.com, buenconsejolalaguna.com, colegiobuenconsejo.es). Bloquea mantenimiento preventivo.',      refTipo: 'web',     refId: 'w5'  },
+    { id: 'p2',  prioridad: 'critico',      categoria: 'Mantenimiento',   descripcion: 'Buen Consejo La Laguna: tareas de mantenimiento bloqueadas. En coordinación con Hostinger para resolver incidencia.',                                        refTipo: 'web',     refId: 'w4'  },
+    // En gestión
+    { id: 'p3',  prioridad: 'gestion',      categoria: 'Dominios / Webs', descripcion: 'buen-consejo.com y www2.buen-consejo.com: pendiente respuesta de Integra para coordinación de accesos y migración.',                                         refTipo: 'web',     refId: 'w9'  },
+    { id: 'p4',  prioridad: 'gestion',      categoria: 'Dominios',        descripcion: 'enroa.org: web activa en Wix (webenroa.wixsite.com/enroa). Pendiente decisión sobre migración al ecosistema principal.',                                      refTipo: 'dominio', refId: 'd19' },
+    { id: 'p5',  prioridad: 'gestion',      categoria: 'Dominios',        descripcion: 'sj-sa.org: sin información disponible. Pendiente identificar responsable y estado actual del dominio.',                                                       refTipo: 'dominio', refId: 'd21' },
+    // Pendiente comunicación
+    { id: 'p6',  prioridad: 'comunicacion', categoria: 'Perú',            descripcion: 'madreteresarodon.edu.pe: pendiente contacto con responsable en Perú para coordinar acceso y evaluación del sitio.',                                           refTipo: 'dominio', refId: 'd22' },
+    { id: 'p7',  prioridad: 'comunicacion', categoria: 'Perú',            descripcion: 'buenconsejo.edu.pe: pendiente contacto con responsable en Perú para coordinar acceso y evaluación del sitio.',                                                refTipo: 'dominio', refId: 'd23' },
+    // Pendiente facturación
+    { id: 'p8',  prioridad: 'facturacion',  categoria: 'Facturación',     descripcion: 'buenconsejoicod.com — Migración completada a Hostinger. Pendiente emisión de factura.',                                                                       refTipo: 'web',     refId: 'w5'  },
+    { id: 'p9',  prioridad: 'facturacion',  categoria: 'Facturación',     descripcion: 'residenciasanfranciscodeasis.org — Migración completada a Hostinger. Pendiente emisión de factura.',                                                          refTipo: 'web',     refId: 'w6'  },
+    { id: 'p10', prioridad: 'facturacion',  categoria: 'Facturación',     descripcion: 'residenciasanmiguelarcangel.org — Migración completada a Hostinger. Pendiente emisión de factura.',                                                           refTipo: 'web',     refId: 'w7'  },
+    { id: 'p11', prioridad: 'facturacion',  categoria: 'Facturación',     descripcion: 'colegiobuenconsejo.es — Migración completada a Hostinger. Pendiente emisión de factura.',                                                                     refTipo: 'web',     refId: 'w8'  },
+  ],
+};
+
 // ── Placeholder genérico ───────────────────────────────────────────────────
 function renderPlaceholder(label) {
   return `
@@ -298,8 +385,9 @@ function init() {
     btn.addEventListener('click', () => navigate(btn.dataset.section));
   });
 
-  // Badge placeholder hasta que existan datos (Fase 2)
-  document.getElementById('badge-alertas').textContent = '·';
+  // Badge con conteo real de alertas críticas (Fase 2)
+  const criticos = appData.pendientes.filter(p => p.prioridad === 'critico').length;
+  document.getElementById('badge-alertas').textContent = criticos;
 
   // Sección inicial
   navigate('dashboard');
