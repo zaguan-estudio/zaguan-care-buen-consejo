@@ -262,6 +262,12 @@ function navigate(section) {
 
   // 3. Renderizar contenido de la sección
   document.getElementById('content').innerHTML = renderSection(section);
+
+  // 4. Poblar sub-tablas tras montar el HTML
+  if (section === 'dominios') {
+    const el = document.getElementById('dominios-tbody');
+    if (el) el.innerHTML = renderTablaDominios();
+  }
 }
 
 // ════════════════════════════════════════
@@ -351,7 +357,35 @@ const appData = {
   ],
 };
 
-// ── Placeholder genérico ───────────────────────────────────────────────────
+// ════════════════════════════════════════
+// HELPERS · BADGES
+// ════════════════════════════════════════
+
+const BADGE = {
+  migrado:        `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Migrado</span>`,
+  pendiente:      `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pendiente</span>`,
+  facturado:      `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Facturado</span>`,
+  'pend-fact':    `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">⏳ Pend. facturación</span>`,
+  'no-facturado': `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">— No facturado</span>`,
+  actualizado:    `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Actualizado</span>`,
+  bloqueado:      `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">⚠ Bloqueado</span>`,
+};
+
+// ════════════════════════════════════════
+// STATE · filtros y búsqueda
+// ════════════════════════════════════════
+
+const state = {
+  dominiosFilter:   'todos',   // 'todos' | 'migrado' | 'pendiente'
+  dominiosBusqueda: '',
+  websFilter:       'todos',   // 'todos' | 'mig-fact' | 'mig-pend' | 'pendiente'
+  websBusqueda:     '',
+};
+
+// ════════════════════════════════════════
+// PLACEHOLDER (secciones pendientes)
+// ════════════════════════════════════════
+
 function renderPlaceholder(label) {
   return `
     <div class="flex flex-col items-center justify-center h-64 text-slate-400 select-none">
@@ -366,11 +400,14 @@ function renderPlaceholder(label) {
     </div>`;
 }
 
-// ── Despachador de secciones ───────────────────────────────────────────────
+// ════════════════════════════════════════
+// DESPACHADOR DE SECCIONES
+// ════════════════════════════════════════
+
 function renderSection(section) {
   switch (section) {
     case 'dashboard':     return renderPlaceholder('Resumen');
-    case 'dominios':      return renderPlaceholder('Dominios');
+    case 'dominios':      return renderDominios();
     case 'webs':          return renderPlaceholder('Sitios Web');
     case 'mantenimiento': return renderPlaceholder('Mantenimiento');
     case 'alertas':       return renderPlaceholder('Pendientes / Alertas');
@@ -378,14 +415,303 @@ function renderSection(section) {
   }
 }
 
-// ── Inicialización ─────────────────────────────────────────────────────────
+// ════════════════════════════════════════
+// FASE 3 · SECCIÓN DOMINIOS
+// ════════════════════════════════════════
+
+function renderDominios() {
+  return `
+    <div class="max-w-6xl mx-auto space-y-5">
+
+      <!-- Toolbar: filtros + buscador -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+
+        <!-- Filter tabs -->
+        <div class="flex items-center gap-1.5">
+          ${tabFiltro('dominiosFilter', 'todos',     'Todos',      appData.dominios.length)}
+          ${tabFiltro('dominiosFilter', 'migrado',   'Migrados',   appData.dominios.filter(d => d.estado === 'migrado').length)}
+          ${tabFiltro('dominiosFilter', 'pendiente', 'Pendientes', appData.dominios.filter(d => d.estado === 'pendiente').length)}
+        </div>
+
+        <!-- Buscador -->
+        <div class="relative">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input
+            id="input-dominios"
+            type="search"
+            placeholder="Buscar dominio…"
+            value="${state.dominiosBusqueda}"
+            oninput="onBuscarDominios(this.value)"
+            class="pl-9 pr-4 py-2 text-sm rounded-lg border border-slate-200 bg-white
+                   focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400
+                   w-60 transition-shadow placeholder-slate-400"
+          />
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div id="dominios-tbody"></div>
+      </div>
+
+    </div>`;
+}
+
+// Renderiza (o re-renderiza) solo la tabla interior
+function renderTablaDominios() {
+  let rows = appData.dominios;
+
+  if (state.dominiosFilter !== 'todos') {
+    rows = rows.filter(d => d.estado === state.dominiosFilter);
+  }
+  if (state.dominiosBusqueda.trim()) {
+    const q = state.dominiosBusqueda.toLowerCase();
+    rows = rows.filter(d =>
+      d.nombre.toLowerCase().includes(q) ||
+      d.proveedor.toLowerCase().includes(q)
+    );
+  }
+
+  if (!rows.length) {
+    return `<div class="px-6 py-14 text-center text-sm text-slate-400">
+              Sin resultados para los filtros aplicados.
+            </div>`;
+  }
+
+  return `
+    <table class="w-full">
+      <thead>
+        <tr class="border-b border-slate-100 bg-slate-50/80">
+          <th class="text-left px-6 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Dominio</th>
+          <th class="text-left px-6 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell">Proveedor</th>
+          <th class="text-left px-6 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Estado</th>
+          <th class="text-right px-6 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        ${rows.map(d => `
+          <tr class="hover:bg-slate-50/80 transition-colors group">
+            <td class="px-6 py-3.5">
+              <span class="text-sm font-mono font-medium text-slate-800 group-hover:text-blue-700 transition-colors">
+                ${d.nombre}
+              </span>
+            </td>
+            <td class="px-6 py-3.5 hidden md:table-cell">
+              <span class="text-sm text-slate-500">${d.proveedor}</span>
+            </td>
+            <td class="px-6 py-3.5">
+              ${BADGE[d.estado] || ''}
+            </td>
+            <td class="px-6 py-3.5 text-right">
+              <button
+                onclick="abrirDrawer('dominio', '${d.id}')"
+                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                       text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200
+                       hover:border-blue-300 transition-colors">
+                Ver ficha
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+      <span class="text-xs text-slate-400">
+        ${rows.length} de ${appData.dominios.length} dominios
+      </span>
+      <span class="text-xs text-slate-400">
+        ${appData.dominios.filter(d => d.estado === 'migrado').length} migrados ·
+        ${appData.dominios.filter(d => d.estado === 'pendiente').length} pendientes
+      </span>
+    </div>`;
+}
+
+// Tab de filtro reutilizable
+function tabFiltro(stateKey, valor, label, count) {
+  const activo = state[stateKey] === valor;
+  return `
+    <button
+      onclick="setFiltro('${stateKey}', '${valor}')"
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+             border transition-colors
+             ${activo
+               ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300'}">
+      ${label}
+      <span class="text-[10px] font-bold px-1 py-0.5 rounded
+                   ${activo ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-500'}">
+        ${count}
+      </span>
+    </button>`;
+}
+
+// Cambia un filtro y re-renderiza la sección correspondiente
+function setFiltro(stateKey, valor) {
+  state[stateKey] = valor;
+  if (stateKey === 'dominiosFilter') {
+    document.getElementById('content').innerHTML = renderDominios();
+    document.getElementById('dominios-tbody').innerHTML = renderTablaDominios();
+  }
+  if (stateKey === 'websFilter') {
+    document.getElementById('content').innerHTML = renderWebs();
+    document.getElementById('webs-tbody').innerHTML = renderTablaWebs();
+  }
+}
+
+function onBuscarDominios(valor) {
+  state.dominiosBusqueda = valor;
+  const el = document.getElementById('dominios-tbody');
+  if (el) el.innerHTML = renderTablaDominios();
+}
+
+// ════════════════════════════════════════
+// FASE 4 · DRAWER LATERAL
+// ════════════════════════════════════════
+
+function abrirDrawer(tipo, id) {
+  const entity = tipo === 'dominio'
+    ? appData.dominios.find(d => d.id === id)
+    : appData.webs.find(w => w.id === id);
+  if (!entity) return;
+
+  document.getElementById('drawer-content').innerHTML =
+    tipo === 'dominio' ? drawerDominio(entity) : drawerWeb(entity);
+
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer-panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarDrawer() {
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.getElementById('drawer-panel').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Ficha · Dominio
+function drawerDominio(d) {
+  return `
+    <!-- Header -->
+    <div class="flex items-start justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
+      <div class="flex-1 min-w-0 pr-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Dominio</p>
+        <h2 class="text-base font-semibold text-slate-900 font-mono break-all leading-snug">
+          ${d.nombre}
+        </h2>
+        <div class="mt-2">${BADGE[d.estado] || ''}</div>
+      </div>
+      <button onclick="cerrarDrawer()"
+        class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg
+               text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+      <div>
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Proveedor</p>
+        <p class="text-sm text-slate-700">${d.proveedor || '—'}</p>
+      </div>
+
+      <hr class="border-slate-100">
+
+      <div>
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Notas</p>
+        <p class="text-sm text-slate-600 leading-relaxed">${d.notas || '—'}</p>
+      </div>
+
+      <hr class="border-slate-100">
+
+      <div>
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Historial</p>
+        <p class="text-sm text-slate-400 italic">Sin registros</p>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 py-5 border-t border-slate-100 space-y-2.5 flex-shrink-0">
+      ${d.url && d.estado === 'migrado' ? `
+        <a href="${d.url}" target="_blank" rel="noopener noreferrer"
+          class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg
+                 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          Visitar dominio
+        </a>` : ''}
+      <button onclick="cerrarDrawer()"
+        class="flex items-center justify-center w-full px-4 py-2.5 rounded-lg
+               border border-slate-200 text-sm font-medium text-slate-600
+               hover:bg-slate-50 transition-colors">
+        Cerrar
+      </button>
+    </div>`;
+}
+
+// Ficha · Web (stub — se completará en Fase 5)
+function drawerWeb(w) {
+  return `
+    <div class="flex items-start justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
+      <div class="flex-1 min-w-0 pr-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Sitio Web WordPress</p>
+        <h2 class="text-base font-semibold text-slate-900 leading-snug">${w.nombre}</h2>
+        ${w.url ? `<p class="text-[11px] text-slate-400 font-mono mt-0.5 break-all">${w.url.replace(/^https?:\/\//, '')}</p>` : ''}
+      </div>
+      <button onclick="cerrarDrawer()"
+        class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg
+               text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="flex-1 flex items-center justify-center text-slate-400 text-sm italic">
+      Ficha completa disponible en Fase 5
+    </div>
+    <div class="px-6 py-5 border-t border-slate-100 flex-shrink-0">
+      <button onclick="cerrarDrawer()"
+        class="flex items-center justify-center w-full px-4 py-2.5 rounded-lg
+               border border-slate-200 text-sm font-medium text-slate-600
+               hover:bg-slate-50 transition-colors">
+        Cerrar
+      </button>
+    </div>`;
+}
+
+// Placeholder para webs — se implementa en Fase 5
+function renderWebs() { return renderPlaceholder('Sitios Web'); }
+
+// ════════════════════════════════════════
+// INICIALIZACIÓN
+// ════════════════════════════════════════
+
 function init() {
-  // Asignar listeners a los botones de navegación
+  // Listeners de navegación
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => navigate(btn.dataset.section));
   });
 
-  // Badge con conteo real de alertas críticas (Fase 2)
+  // Overlay del drawer cierra al hacer clic fuera
+  document.getElementById('drawer-overlay').addEventListener('click', cerrarDrawer);
+
+  // Cerrar drawer con Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') cerrarDrawer();
+  });
+
+  // Badge alertas críticas
   const criticos = appData.pendientes.filter(p => p.prioridad === 'critico').length;
   document.getElementById('badge-alertas').textContent = criticos;
 
