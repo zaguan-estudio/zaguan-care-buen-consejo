@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ecosistema Digital · Franciscanas del Buen Consejo</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Inter · Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Tipografía global ── */
+    *, *::before, *::after { font-family: 'Inter', sans-serif; }
+
+    /* ── Scrollbar sidebar ── */
+    .sidebar-scroll::-webkit-scrollbar          { width: 3px; }
+    .sidebar-scroll::-webkit-scrollbar-track    { background: transparent; }
+    .sidebar-scroll::-webkit-scrollbar-thumb    { background: #334155; border-radius: 2px; }
+
+    /* ── Scrollbar contenido principal ── */
+    .main-scroll::-webkit-scrollbar             { width: 6px; }
+    .main-scroll::-webkit-scrollbar-track       { background: #f1f5f9; }
+    .main-scroll::-webkit-scrollbar-thumb       { background: #cbd5e1; border-radius: 3px; }
+
+    /* ── Drawer ── */
+    .drawer-overlay {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .drawer-panel {
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .drawer-panel.open {
+      transform: translateX(0);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased">
+<div class="flex h-screen overflow-hidden">
+
+  <!-- ════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════ -->
+  <aside class="flex flex-col flex-shrink-0 bg-slate-900" style="width:260px;">
+
+    <!-- Logo -->
+    <div class="px-5 py-5 border-b border-slate-700/60 flex-shrink-0">
+      <div class="flex items-center gap-2.5 mb-0.5">
+        <div class="w-7 h-7 rounded-md bg-blue-600 flex items-center justify-center flex-shrink-0">
+          <span class="text-white font-bold text-sm leading-none select-none">z</span>
+        </div>
+        <span class="text-white font-semibold text-[15px] tracking-tight">zaguan</span>
+      </div>
+      <p class="text-slate-400 text-xs mt-1 ml-9 leading-none">Buen Consejo</p>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="flex-1 px-3 py-4 space-y-0.5 sidebar-scroll overflow-y-auto">
+
+      <button data-section="dashboard"
+        class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
+               text-slate-400 hover:text-white hover:bg-slate-800
+               transition-all duration-150 text-left">
+        <!-- Heroicon: home -->
+        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0
+               01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span>Resumen</span>
+      </button>
+
+      <button data-section="dominios"
+        class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
+               text-slate-400 hover:text-white hover:bg-slate-800
+               transition-all duration-150 text-left">
+        <!-- Heroicon: globe-alt -->
+        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657
+               0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9
+               9 0 019-9"/>
+        </svg>
+        <span>Dominios</span>
+      </button>
+
+      <button data-section="webs"
+        class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
+               text-slate-400 hover:text-white hover:bg-slate-800
+               transition-all duration-150 text-left">
+        <!-- Heroicon: desktop-computer -->
+        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0
+               00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        <span>Sitios Web</span>
+      </button>
+
+      <button data-section="mantenimiento"
+        class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
+               text-slate-400 hover:text-white hover:bg-slate-800
+               transition-all duration-150 text-left">
+        <!-- Heroicon: cog -->
+        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573
+               1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065
+               2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066
+               2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572
+               1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724
+               1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724
+               1.724 0 001.066-2.573c-.94-1.543.826-3.31
+               2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>Mantenimiento</span>
+      </button>
+
+      <button data-section="alertas"
+        class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
+               text-slate-400 hover:text-white hover:bg-slate-800
+               transition-all duration-150 text-left">
+        <!-- Heroicon: exclamation -->
+        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667
+               1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77
+               1.333.192 3 1.732 3z"/>
+        </svg>
+        <span class="flex-1">Pendientes</span>
+        <!-- Badge numérico — se actualiza desde JS -->
+        <span id="badge-alertas"
+          class="bg-red-500 text-white text-[10px] font-bold rounded-full
+                 min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
+          —
+        </span>
+      </button>
+
+    </nav>
+
+    <!-- Footer sidebar -->
+    <div class="px-5 py-4 border-t border-slate-700/60 flex-shrink-0">
+      <p class="text-slate-500 text-xs">Actualizado: 24/03/2026</p>
+    </div>
+
+  </aside>
+
+
+  <!-- ════════════════════════════════════════
+       ZONA PRINCIPAL
+  ════════════════════════════════════════ -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+    <!-- Header de sección -->
+    <header class="flex-shrink-0 bg-white border-b border-slate-200 px-8 py-4">
+      <div class="flex items-start justify-between">
+        <div>
+          <!-- Breadcrumb -->
+          <nav class="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+            <span>Zaguán Estudio</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span>Buen Consejo</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span id="breadcrumb-section" class="text-slate-600 font-medium">Resumen</span>
+          </nav>
+          <!-- Título dinámico -->
+          <h1 id="section-title" class="text-xl font-semibold text-slate-900">
+            Resumen del ecosistema
+          </h1>
+        </div>
+        <div class="text-right pt-0.5">
+          <p class="text-[11px] text-slate-400 leading-none mb-0.5">Datos actualizados a</p>
+          <p class="text-sm font-semibold text-slate-700">24/03/2026</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Área de contenido (scroll interno) -->
+    <div id="content" class="flex-1 overflow-y-auto main-scroll bg-slate-50 p-8">
+      <!-- Renderizado por JS según sección activa -->
+    </div>
+
+    <!-- Footer -->
+    <footer class="flex-shrink-0 bg-white border-t border-slate-200 px-8 py-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-slate-400">
+          Zaguán Estudio S.L. &middot;
+          <a href="mailto:hello@zaguan.io"
+             class="hover:text-blue-600 transition-colors">hello@zaguan.io</a>
+          &middot;
+          <a href="https://zaguan.io" target="_blank" rel="noopener"
+             class="hover:text-blue-600 transition-colors">zaguan.io</a>
+        </span>
+        <span class="text-xs text-slate-400">Datos actualizados a 24/03/2026</span>
+      </div>
+    </footer>
+
+  </div><!-- fin zona principal -->
+
+</div><!-- fin app wrapper -->
+
+
+<!-- ════════════════════════════════════════
+     DRAWER (Fase 4 — estructura reservada)
+════════════════════════════════════════ -->
+<div id="drawer-overlay"
+  class="drawer-overlay fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[1px]">
+</div>
+<aside id="drawer-panel"
+  class="drawer-panel fixed top-0 right-0 z-50 h-full bg-white shadow-2xl flex flex-col"
+  style="width:420px;">
+  <div id="drawer-content" class="flex flex-col h-full overflow-hidden"></div>
+</aside>
+
+
+<!-- ════════════════════════════════════════
+     JAVASCRIPT — Fase 1: Navegación
+════════════════════════════════════════ -->
+<script>
+
+// ── Metadatos por sección ──────────────────────────────────────────────────
+const SECTION_META = {
+  dashboard:     { title: 'Resumen del ecosistema',  crumb: 'Resumen' },
+  dominios:      { title: 'Gestión de dominios',     crumb: 'Dominios' },
+  webs:          { title: 'Sitios Web WordPress',    crumb: 'Sitios Web' },
+  mantenimiento: { title: 'Mantenimiento técnico',   crumb: 'Mantenimiento' },
+  alertas:       { title: 'Pendientes y alertas',    crumb: 'Pendientes' },
+};
+
+// ── Navegación principal ───────────────────────────────────────────────────
+function navigate(section) {
+  // 1. Actualizar header
+  const meta = SECTION_META[section] || SECTION_META.dashboard;
+  document.getElementById('section-title').textContent    = meta.title;
+  document.getElementById('breadcrumb-section').textContent = meta.crumb;
+
+  // 2. Resaltar nav item activo
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    const isActive = btn.dataset.section === section;
+    btn.classList.toggle('bg-slate-800', isActive);
+    btn.classList.toggle('text-white',   isActive);
+    btn.classList.toggle('text-slate-400', !isActive);
+  });
+
+  // 3. Renderizar contenido de la sección
+  document.getElementById('content').innerHTML = renderSection(section);
+}
+
+// ── Placeholder genérico ───────────────────────────────────────────────────
+function renderPlaceholder(label) {
+  return `
+    <div class="flex flex-col items-center justify-center h-64 text-slate-400 select-none">
+      <svg class="w-10 h-10 mb-3 opacity-25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0
+             01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2
+             2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+      </svg>
+      <p class="text-sm font-medium">${label}</p>
+      <p class="text-xs mt-1 text-slate-300">En construcción · próxima fase</p>
+    </div>`;
+}
+
+// ── Despachador de secciones ───────────────────────────────────────────────
+function renderSection(section) {
+  switch (section) {
+    case 'dashboard':     return renderPlaceholder('Resumen');
+    case 'dominios':      return renderPlaceholder('Dominios');
+    case 'webs':          return renderPlaceholder('Sitios Web');
+    case 'mantenimiento': return renderPlaceholder('Mantenimiento');
+    case 'alertas':       return renderPlaceholder('Pendientes / Alertas');
+    default:              return renderPlaceholder('Sección');
+  }
+}
+
+// ── Inicialización ─────────────────────────────────────────────────────────
+function init() {
+  // Asignar listeners a los botones de navegación
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => navigate(btn.dataset.section));
+  });
+
+  // Badge placeholder hasta que existan datos (Fase 2)
+  document.getElementById('badge-alertas').textContent = '·';
+
+  // Sección inicial
+  navigate('dashboard');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
